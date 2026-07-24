@@ -1,0 +1,17 @@
+{
+  "name": "payflow",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SaaS fictício de gerenciamento de pagamentos - projeto de portfólio",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "test:api": "npm run test --workspace=apps/api",
+    "test:web": "npm run test --workspace=apps/web"
+  },
+  "license": "MIT"
+}

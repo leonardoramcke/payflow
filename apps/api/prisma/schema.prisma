@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Empresa cliente do SaaS (multi-tenant)
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  customers Customer[]
+  payments  Payment[]
+  webhooks  Webhook[]
+}
+
+// OBS: SQLite não suporta "enum" nativo do Prisma.
+// Por isso usamos String aqui e validamos os valores possíveis
+// na camada de aplicação (DTOs com class-validator @IsIn([...])).
+// Valores possíveis de "role": "OWNER" | "ADMIN" | "MEMBER"
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("MEMBER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId String
+}
+
+// Cliente final que recebe cobranças
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  document  String? // CPF/CNPJ fictício
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId String
+  payments Payment[]
+}
+
+// Valores possíveis de "method": "PIX" | "CREDIT_CARD" | "BOLETO"
+// Valores possíveis de "status": "PENDING" | "PROCESSING" | "PAID" | "FAILED" | "REFUNDED"
+model Payment {
+  id          String   @id @default(uuid())
+  amountCents Int
+  currency    String   @default("BRL")
+  method      String
+  status      String   @default("PENDING")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  tenantId     String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  customerId   String
+  transactions Transaction[]
+}
+
+// Histórico de mudanças de status (simula o "processamento" do gateway)
+model Transaction {
+  id        String   @id @default(uuid())
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+
+  payment   Payment @relation(fields: [paymentId], references: [id])
+  paymentId String
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  url       String
+  event     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  tenantId String
+}
