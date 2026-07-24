@@ -9,3 +9,5 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 *.tsbuildinfo
+*.db
+*.db-journal
