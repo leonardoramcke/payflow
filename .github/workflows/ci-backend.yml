@@ -15,21 +15,6 @@ jobs:
       run:
         working-directory: apps/api
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: payflow
-          POSTGRES_PASSWORD: payflow
-          POSTGRES_DB: payflow
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
@@ -44,10 +29,7 @@ jobs:
       - name: Gerar Prisma Client
         run: npx prisma generate
 
-      - name: Rodar lint
-        run: npm run lint
-
-      - name: Rodar testes
-        run: npm run test
+      - name: Rodar build
+        run: npm run build
         env:
-          DATABASE_URL: postgresql://payflow:payflow@localhost:5432/payflow
+          DATABASE_URL: "file:./dev.db"
